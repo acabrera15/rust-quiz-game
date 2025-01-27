@@ -1,6 +1,5 @@
-use core::num;
 use rusqlite::{params, Connection, Result};
-use std::io;
+use std::io::{self};
 
 struct Option {
     option: String,
@@ -177,24 +176,51 @@ fn main() -> Result<()> {
                 }
             }
             2 => {
-                if let Err(err) = add_question(
-                    &conn,
-                    "How tall is Andrew?",
-                    vec![
-                        Option {
-                            option: String::from("5'8"),
-                            is_correct: true,
-                        },
-                        Option {
-                            option: String::from("5'2"),
-                            is_correct: false,
-                        },
-                        Option {
-                            option: String::from("5'5"),
-                            is_correct: false,
-                        },
-                    ],
-                ) {
+                println!("Enter the question you would like to ask");
+                let mut question_input = String::new();
+
+                io::stdin()
+                    .read_line(&mut question_input)
+                    .expect("Unable to read line");
+
+                let trimmed_question = question_input.trim();
+                let mut options_vec: Vec<Option> = Vec::new();
+
+                for option in 0..4 {
+                    println!("Enter option {}", option);
+
+                    let mut option_input = String::new();
+                    io::stdin()
+                        .read_line(&mut option_input)
+                        .expect("Unable to read line");
+                    let trimmed_option = option_input.trim();
+
+                    println!("Is this answer correct? Y/N");
+
+                    let mut is_correct_input = String::new();
+                    let mut character: char;
+
+                    loop {
+                        is_correct_input.clear();
+                        io::stdin()
+                            .read_line(&mut is_correct_input)
+                            .expect("Unable to read input");
+                        if let Some(first_char) = is_correct_input.trim().chars().next() {
+                            character = first_char;
+                            if ['Y', 'y', 'N', 'n'].contains(&character) {
+                                break;
+                            }
+                        }
+                        println!("Enter Y or N");
+                    }
+
+                    options_vec.push(Option {
+                        option: String::from(trimmed_option),
+                        is_correct: character == 'Y' || character == 'y',
+                    });
+                }
+
+                if let Err(err) = add_question(&conn, trimmed_question, options_vec) {
                     println!("Failed to add question: {}", err);
                 } else {
                     println!("Question added successfully");
@@ -206,6 +232,7 @@ fn main() -> Result<()> {
                 let mut user_input = String::new();
                 let num_input: u32;
 
+                // capture, validate input and delete question
                 loop {
                     user_input.clear();
                     io::stdin()
