@@ -51,9 +51,18 @@ fn add_question(conn: &Connection, question: &str, options: Vec<(&str, bool)>) -
 // TODO: list questions
 
 fn main() -> Result<()> {
+    init_db()?;
     let path = "quiz_db.db3";
     let conn = Connection::open(path);
 
-    init_db()?;
+    println!("Welcome to admin side");
+    println!("Here you can manipulate the questions to be shown to users");
+    println!("Select one of the options below");
+    println!("-------------------------------");
+    println!("1. List questions");
+    println!("2. Add question");
+    println!("3. Update question");
+    println!("4. Delete question");
+
     Ok(())
 }
