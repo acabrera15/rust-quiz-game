@@ -142,6 +142,7 @@ fn main() -> Result<()> {
         println!("2. Add question");
         println!("3. Update question");
         println!("4. Delete question");
+        println!("5. Exit");
 
         let mut input = String::new();
         let mut num_input: u8;
@@ -161,8 +162,8 @@ fn main() -> Result<()> {
                 }
             };
 
-            if num_input > 4 || num_input < 1 {
-                println!("Enter a number from 1-4 \n");
+            if num_input > 5 || num_input < 1 {
+                println!("Enter a number from 1-5 \n");
                 continue;
             }
 
@@ -254,6 +255,7 @@ fn main() -> Result<()> {
                     println!("Question deleted successfully");
                 }
             }
+            5 => break,
             _ => println!("invalid option \n"),
         }
     }
