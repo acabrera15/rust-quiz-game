@@ -13,9 +13,9 @@ struct Question {
 
 fn init_db() -> Result<()> {
     let path = "quiz_db.db3";
-
     let conn = Connection::open(path)?;
 
+    // create table question table
     conn.execute(
         "CREATE TABLE IF NOT EXISTS questions (
             id INTEGER PRIMARY KEY,
@@ -24,6 +24,7 @@ fn init_db() -> Result<()> {
         [],
     )?;
 
+    // create options table
     conn.execute(
         "CREATE TABLE IF NOT EXISTS options (
             id INTEGER PRIMARY KEY,
@@ -102,15 +103,15 @@ fn list_questions(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-fn add_question(conn: &Connection, question: &str, options: Vec<(&str, bool)>) -> Result<()> {
+fn add_question(conn: &Connection, question: &str, options: Vec<Option>) -> Result<()> {
     // insert question
     conn.execute("INSERT INTO questions (question) VALUES (?1)", [question])?;
     let last_id = conn.last_insert_rowid();
 
-    for (option_text, correct) in options {
+    for option in options {
         conn.execute(
             "INSERT INTO options (question_id, option_text, is_correct) VALUES (?1, ?2, ?3)",
-            params![last_id, option_text, correct],
+            params![last_id, option.option, option.is_correct],
         )?;
     }
 
@@ -173,7 +174,20 @@ fn main() -> Result<()> {
                 if let Err(err) = add_question(
                     &conn,
                     "How tall is Andrew?",
-                    vec![("5'8", true), ("5'2", false), ("5'0", false)],
+                    vec![
+                        Option {
+                            option: String::from("5'8"),
+                            is_correct: true,
+                        },
+                        Option {
+                            option: String::from("5'2"),
+                            is_correct: false,
+                        },
+                        Option {
+                            option: String::from("5'5"),
+                            is_correct: false,
+                        },
+                    ],
                 ) {
                     println!("Failed to add question: {}", err);
                 } else {
