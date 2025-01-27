@@ -1,6 +1,16 @@
 use rusqlite::{params, Connection, Result};
 use std::io;
 
+struct Option {
+    option: String,
+    is_correct: bool,
+}
+struct Question {
+    id: u32,
+    question: String,
+    options: Vec<Option>,
+}
+
 fn init_db() -> Result<()> {
     let path = "quiz_db.db3";
 
@@ -28,6 +38,62 @@ fn init_db() -> Result<()> {
     Ok(())
 }
 
+// TODO: list questions
+fn list_questions(conn: &Connection) -> Result<()> {
+    let mut questions_vec: Vec<Question> = Vec::new();
+
+    let mut stmt = conn.prepare("SELECT * FROM questions")?;
+    let questions_iter = stmt.query_map([], |row| {
+        let id: u32 = row.get(0)?;
+        let question: String = row.get(1)?;
+        Ok((id, question))
+    })?;
+
+    for question in questions_iter {
+        match question {
+            Ok((id, question)) => {
+                let mut options_stmt =
+                    conn.prepare("SELECT * FROM options WHERE question_id = ?1")?;
+                let options_iter = options_stmt.query_map(params![id], |row| {
+                    let option_text: String = row.get(2)?;
+                    let is_correct: bool = row.get(3)?;
+                    Ok((option_text, is_correct))
+                })?;
+
+                let mut option_vec: Vec<Option> = Vec::new();
+
+                for option in options_iter {
+                    match option {
+                        Ok((option_text, is_correct)) => {
+                            option_vec.push(Option {
+                                option: option_text,
+                                is_correct: is_correct,
+                            });
+                        }
+                        Err(err) => println!("Error reading row: {}", err),
+                    }
+                }
+
+                questions_vec.push(Question {
+                    id: id,
+                    question: question,
+                    options: option_vec,
+                });
+            }
+            Err(err) => println!("Error reading row: {}", err),
+        }
+    }
+
+    for question in questions_vec {
+        println!("\n{}.{}", question.id, question.question);
+        for option in question.options {
+            println!("\t{} {}", option.option, option.is_correct);
+        }
+        println!("\n");
+    }
+    Ok(())
+}
+
 fn add_question(conn: &Connection, question: &str, options: Vec<(&str, bool)>) -> Result<()> {
     // insert question
     conn.execute("INSERT INTO questions (question) VALUES (?1)", [question])?;
@@ -43,13 +109,9 @@ fn add_question(conn: &Connection, question: &str, options: Vec<(&str, bool)>) -
     Ok(())
 }
 
-// TODO: add question
-
 // TODO: delete question
 
 // TODO: update question
-
-// TODO: list questions
 
 fn main() -> Result<()> {
     init_db()?;
@@ -94,7 +156,11 @@ fn main() -> Result<()> {
         }
 
         match num_input {
-            1 => println!("list \n"),
+            1 => {
+                if let Err(_) = list_questions(&conn) {
+                    println!("Failed to print questions")
+                }
+            }
             2 => {
                 if let Err(err) = add_question(
                     &conn,
