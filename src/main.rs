@@ -42,6 +42,7 @@ fn init_db() -> Result<()> {
 fn list_questions(conn: &Connection) -> Result<()> {
     let mut questions_vec: Vec<Question> = Vec::new();
 
+    // get all questions
     let mut stmt = conn.prepare("SELECT * FROM questions")?;
     let questions_iter = stmt.query_map([], |row| {
         let id: u32 = row.get(0)?;
@@ -49,6 +50,7 @@ fn list_questions(conn: &Connection) -> Result<()> {
         Ok((id, question))
     })?;
 
+    // iterate through question geting the options adding them to structs
     for question in questions_iter {
         match question {
             Ok((id, question)) => {
@@ -84,13 +86,19 @@ fn list_questions(conn: &Connection) -> Result<()> {
         }
     }
 
-    for question in questions_vec {
-        println!("\n{}.{}", question.id, question.question);
-        for option in question.options {
-            println!("\t{} {}", option.option, option.is_correct);
+    // neatly print out the questions and options
+    if questions_vec.len() == 0 {
+        println!("\nThere are no questions added! \n")
+    } else {
+        for question in questions_vec {
+            println!("\n{}.{}", question.id, question.question);
+            for option in question.options {
+                println!("\t{} {}", option.option, option.is_correct);
+            }
+            println!("\n");
         }
-        println!("\n");
     }
+
     Ok(())
 }
 
