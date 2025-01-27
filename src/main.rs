@@ -1,3 +1,4 @@
+use core::num;
 use rusqlite::{params, Connection, Result};
 use std::io;
 
@@ -119,6 +120,11 @@ fn add_question(conn: &Connection, question: &str, options: Vec<Option>) -> Resu
 }
 
 // TODO: delete question
+fn delete_question(conn: &Connection, id: u32) -> Result<()> {
+    conn.execute("DELETE FROM questions WHERE id = ?1", [id])?;
+
+    Ok(())
+}
 
 // TODO: update question
 
@@ -195,8 +201,33 @@ fn main() -> Result<()> {
                 }
             }
             3 => println!("update \n"),
-            4 => println!("delete \n"),
-            _ => println!("invlad option \n"),
+            4 => {
+                println!("Enter the id of the question you want to delete");
+                let mut user_input = String::new();
+                let num_input: u32;
+
+                loop {
+                    user_input.clear();
+                    io::stdin()
+                        .read_line(&mut user_input)
+                        .expect("Unable to read line");
+
+                    num_input = match user_input.trim().parse() {
+                        Ok(num) => num,
+                        Err(_) => {
+                            println!("Enter a valid number");
+                            continue;
+                        }
+                    };
+                    break;
+                }
+                if let Err(err) = delete_question(&conn, num_input) {
+                    println!("Failed to delete question: {}", err);
+                } else {
+                    println!("Question deleted successfully");
+                }
+            }
+            _ => println!("invalid option \n"),
         }
     }
 
