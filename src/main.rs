@@ -1,4 +1,4 @@
-use rusqlite::{Connection, Result};
+use rusqlite::{params, Connection, Result};
 
 fn init_db() -> Result<()> {
     let path = "quiz_db.db3";
@@ -27,6 +27,21 @@ fn init_db() -> Result<()> {
     Ok(())
 }
 
+fn add_question(conn: &Connection, question: &str, options: Vec<(&str, bool)>) -> Result<()> {
+    // insert question
+    conn.execute("INSERT INTO questions (question) VALUES (?1)", [question])?;
+    let last_id = conn.last_insert_rowid();
+
+    for (option_text, correct) in options {
+        conn.execute(
+            "INSERT INTO options (question_id, option_text, is_correct) VALUES (?1, ?2, ?3)",
+            params![last_id, option_text, correct],
+        )?;
+    }
+
+    Ok(())
+}
+
 // TODO: add question
 
 // TODO: delete question
@@ -36,6 +51,9 @@ fn init_db() -> Result<()> {
 // TODO: list questions
 
 fn main() -> Result<()> {
+    let path = "quiz_db.db3";
+    let conn = Connection::open(path);
+
     init_db()?;
     Ok(())
 }
