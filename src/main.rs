@@ -171,15 +171,18 @@ fn main() -> Result<()> {
         }
 
         match num_input {
+            // list
             1 => {
                 if let Err(_) = list_questions(&conn) {
                     println!("Failed to print questions")
                 }
             }
+            // add
             2 => {
-                println!("Enter the question you would like to ask");
+                println!("Enter the question you would like to add");
                 let mut question_input = String::new();
 
+                // capture question
                 io::stdin()
                     .read_line(&mut question_input)
                     .expect("Unable to read line");
@@ -187,6 +190,7 @@ fn main() -> Result<()> {
                 let trimmed_question = question_input.trim();
                 let mut options_vec: Vec<Option> = Vec::new();
 
+                // capture 4 options
                 for option in 0..4 {
                     println!("Enter option {}", option);
 
@@ -227,7 +231,9 @@ fn main() -> Result<()> {
                     println!("Question added successfully");
                 }
             }
+            // update
             3 => println!("update \n"),
+            // delete
             4 => {
                 println!("Enter the id of the question you want to delete");
                 let mut user_input = String::new();
@@ -255,6 +261,7 @@ fn main() -> Result<()> {
                     println!("Question deleted successfully");
                 }
             }
+            // exit
             5 => break,
             _ => println!("invalid option \n"),
         }
